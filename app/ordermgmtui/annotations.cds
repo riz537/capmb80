@@ -226,10 +226,6 @@ annotate service.Products with {
 };
 
 annotate service.OrderItems with {
-    order @Common.FieldControl : #ReadOnly
-};
-
-annotate service.OrderItems with {
     unitPrice @Common.FieldControl : #ReadOnly
 };
 
