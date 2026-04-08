@@ -5,7 +5,7 @@ const { SELECT, UPDATE } = require('@sap/cds/lib/ql/cds-ql');
 
 module.exports = class OrderMgmtService extends cds.ApplicationService { 
  init() {
-const { Orders, OrderItems } = this.entities(OrderMgmtService);
+const { Orders, OrderItems, Products } = this.entities(OrderMgmtService);
  
     this.after("PATCH",OrderItems.drafts,async(data,req)=>{
         console.log("Inside Pathc operation on OrderItems draft");
@@ -42,6 +42,28 @@ const { Orders, OrderItems } = this.entities(OrderMgmtService);
 
     this.before(['CREATE','UPDATE'],Orders,async req=>{
        console.log("inside before create or update of orders");
+       const items = req.data.items || [];
+       if(items.length === 0 ){
+         req.error("Order can not be created without items");
+       }else{
+             for(const item of items){
+                  console.log(item);
+                  const productID = item.product_ID;
+                  const product = await SELECT.one.from(Products).where({ID:productID});
+                  const currentStock = product.stock;
+                  const orderQty = item.quantity;
+                  if(currentStock<orderQty){
+                     req.error("Insufficient stock for the product "+productID+"-"+product.name);
+                  }else{
+                     await UPDATE(Products).set({stock:currentStock-orderQty}).where({ID:productID});
+                  }
+
+                 
+
+             } 
+       }
+
+
     });
     
 
